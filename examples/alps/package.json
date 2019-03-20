@@ -1,0 +1,21 @@
+{
+    "name": "badgeman-examples-alps",
+    "version": "1.0.0",
+    "description": "A sample sub project in a monorepo for demonstration.",
+    "main": "index.js",
+    "scripts": {
+    },
+    "author": "jliang01@fortinet.com",
+    "license": "MIT",
+    "bin": {
+    },
+    "dependencies": {
+    },
+    "devDependencies": {
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/JaydenLiang/badgeman.git",
+        "directory": "examples/alps"
+    }
+}

@@ -14,7 +14,8 @@
 /* eslint-disable no-unused-vars */
 exports = module.exports;
 const path = require('path'),
-    fs = require('fs');
+    fs = require('fs'),
+    colors = require('colors/safe');
 
 let _init = false;
 
@@ -35,6 +36,10 @@ function readNpmPackage(filePath) {
 
 function getRealPath(packageRootPath) {
     const realPath = path.resolve(process.cwd(), packageRootPath);
+    if (!(realPath && realPath.indexOf(process.cwd()) === 0)) {
+        throw new Error(`Invalid path. Path: ${packageRootPath} cannot be resolved to ` +
+        `${process.cwd()}`);
+    }
     return realPath && realPath.indexOf(process.cwd()) === 0 && realPath;
 }
 
@@ -45,15 +50,238 @@ function init() {
     return _init;
 }
 
+function getEndpoint() {
+
+}
+
+function findNextNewLine(lines, fromLine = 0) {
+    let lineNum = fromLine;
+    while (lines[lineNum].trim() !== '') {
+        lineNum ++;
+    }
+    return lineNum;
+}
+
+const BADGE_COLOR = ['lightgrey', 'grey'];
+const BADGE_STYLE = ['flat'];
+
+
+function getBadgeColor(color) {
+    return BADGE_COLOR.includes(color) ? color : BADGE_COLOR[0];
+}
+
+function getBadgeStyle(style) {
+    return BADGE_STYLE.includes(style) ? style : BADGE_STYLE[0];
+}
+
+class Badge {
+    constructor(label, defaultMessage = '') {
+        this._label = label && (label !== true && label.toString().trim() || '');
+        this._defaultMessage = defaultMessage &&
+            (defaultMessage !== true && defaultMessage.toString().trim() || '');
+    }
+
+    static get COLOR_LIGHT_GREY() {
+        return getBadgeColor('lightgrey');
+    }
+    static get COLOR_GREY() {
+        return getBadgeColor('grey');
+    }
+
+    static get STYLE_FLAT() {
+        return getBadgeStyle('flat');
+    }
+}
+
+class CodeSizeBadge extends Badge {
+    constructor(username, repoName, branchName = 'master', defaultMessage = '',
+        style = Badge.STYLE_FLAT) {
+        super('Code Size', defaultMessage);
+        this._styleName = style;
+        this._username = username;
+        this._repoName = repoName;
+        this._branchName = branchName;
+    }
+
+    toString() {
+        return `[![${this._label}](https://img.shields.io/github/languages/code-size/` +
+        `${this._username}/${this._repoName}.svg?` +
+        `style=${this._styleName})](${this._defaultMessage})`;
+    }
+}
+
+class RepoSizeBadge extends Badge {
+    constructor(username, repoName, branchName = 'master', defaultMessage = '',
+        style = Badge.STYLE_FLAT) {
+        super('Code Size', defaultMessage);
+        this._styleName = style;
+        this._username = username;
+        this._repoName = repoName;
+        this._branchName = branchName;
+    }
+
+    toString() {
+        return `[![${this._label}](https://img.shields.io/github/repo-size/` +
+        `${this._username}/${this._repoName}.svg?` +
+        `style=${this._styleName})](${this._defaultMessage})`;
+    }
+}
+
+class PackageVersionBadge extends Badge {
+    constructor(username, repoName, branchName = 'master', defaultMessage = '',
+        style = Badge.STYLE_FLAT) {
+        super('Code Size', defaultMessage);
+        this._styleName = style;
+        this._username = username;
+        this._repoName = repoName;
+        this._branchName = branchName;
+    }
+
+    toString() {
+        return `[![${this._label}](https://img.shields.io/github/package-json/v/` +
+        `${this._username}/${this._repoName}/${this._branchName}.svg?` +
+        `style=${this._styleName})](${this._defaultMessage})`;
+    }
+}
+
+class LatestTagBadge extends Badge {
+    constructor(username, repoName, prerelease = false, defaultMessage = '',
+        style = Badge.STYLE_FLAT) {
+        super('Code Size', defaultMessage);
+        this._styleName = style;
+        this._username = username;
+        this._repoName = repoName;
+        this._prerelease = !!prerelease;
+    }
+
+    toString() {
+        return `[![${this._label}](https://img.shields.io/github/tag` +
+        `${this._prerelease ? '-pre' : ''}` +
+        `/${this._username}/${this._repoName}.svg?` +
+        `style=${this._styleName})](${this._defaultMessage})`;
+    }
+}
+
+class CustomBadge extends Badge {
+    constructor(endpointURL, label, defaultMessage = '', style = Badge.STYLE_FLAT) {
+        super(label, defaultMessage);
+        this._styleName = style;
+        this._endpointURL = endpointURL;
+    }
+
+    static create(endpointURL, label, message, schema = null) {
+        let badge = new CustomBadge(endpointURL, label, message);
+        if (!schema) {
+            badge.schema = CustomBadge.createSchema(label, message);
+        } else {
+            badge.schema = schema;
+        }
+        return badge;
+    }
+
+    // eslint-disable-next-line max-params
+    static createSchema(label, message,
+        color = Badge.COLOR_LIGHT_GREY,
+        labelColor = Badge.COLOR_GREY,
+        style = Badge.STYLE_FLAT,
+        isError = false, cacheSeconds = 300,
+        namedLogo = 'none', logoSvg = 'none',
+        logoColor = 'none', logoWidth = 'none', logoPosition = 'none') {
+        let schema = {
+            label: label,
+            message: message,
+            style: style ? style : Badge.STYLE_FLAT
+        };
+
+        if (color) {
+            schema.color = color ? color : Badge.COLOR_LIGHT_GREY;
+        }
+
+        if (labelColor) {
+            schema.labelColor = labelColor ? labelColor : Badge.COLOR_GREY;
+        }
+
+        if (isError) {
+            schema.isError = true;
+        }
+
+        if (!isNaN(cacheSeconds)) {
+            schema.cacheSeconds = parseInt(cacheSeconds) > 0 ? parseInt(cacheSeconds) : 300;
+        }
+
+        if (cacheSeconds) {
+            schema.cacheSeconds = parseInt(cacheSeconds) > 0 ? parseInt(cacheSeconds) : 300;
+        }
+
+        if (namedLogo) {
+            schema.namedLogo = namedLogo;
+        }
+
+        if (logoSvg) {
+            schema.namedLogo = namedLogo;
+        }
+        if (logoColor) {
+            schema.namedLogo = logoColor;
+        }
+
+        if (logoWidth) {
+            schema.logoWidth = logoWidth;
+        }
+
+        if (logoPosition) {
+            schema.logoPosition = logoPosition;
+        }
+
+        return schema;
+
+    }
+
+    get schema() {
+        return this._schema;
+    }
+
+    /**
+     * Endpoint schema
+     * @param {SchemaObject} schema an endpoint schema object
+     * @see https://shields.io/endpoint
+     */
+    set schema(schema) {
+        this._schema = schema;
+    }
+
+    set endpointURL(url) {
+        this._endpointURL = url;
+    }
+
+    get endpointURL() {
+        return this._endpointURL;
+    }
+
+    toString() {
+        if (!this._endpointURL) {
+            throw new Error('no endpoint URL provided.');
+        }
+        return `[![${this._label}](https://img.shields.io/endpoint.svg?url=` +
+        `${encodeURIComponent(this._endpointURL)}&style=${this._styleName})]` +
+        `(${this._defaultMessage})`;
+    }
+}
+
 class Badgeman {
-    constructor() {
+    constructor(username, repoName, branchName = 'master') {
         this._workingPackageRootPath = null;
         this._workingPackageJsonPath = null;
         this._packageInfo = null;
-        this._gitHubUserName = null;
-        this._gitHubRepoNmae = null;
+        this._username = username;
+        this._repoName = repoName;
+        this._branchName = branchName;
         this._markdown = false;
-        this._badgesExpressions = new Map();
+        this._styleName = null;
+        this._badgeMap = new Map();
+    }
+
+    static get SCHEMA_VERSION() {
+        return 1;
     }
 
     get workingPackageJsonPath() {
@@ -84,72 +312,115 @@ class Badgeman {
         this._markdown = !!bool;
     }
 
+    get style() {
+        return this._styleName;
+    }
+
     /**
      * set the style from: plastic | flat | flat-square | for-the-badge | popout |
      * popout-square | social
      * @param {String} name the style name
      */
     set style(name) {
-        this.applyStyle(name);
+        const styleName = getBadgeStyle(name);
+        if (styleName !== name) {
+            throw new Error('Style name not supported.');
+        }
+        this._styleName = styleName;
     }
 
-    applyStyle(name) {
-        if (name && name !== true && ['plastic', 'flat', 'flat-square', 'for-the-badge',
-            'popout', 'popout-square', 'social'].includes(name.toString().trim())) {
-            this._styleName = name.toString().trim();
-            // apply style to all badges
+    addBadge(badge, key = null) {
+        if (!(badge instanceof Badge)) {
+            throw new Error('Not a valid badge type:', JSON.stringify(badge));
+        }
+        const badgeName = typeof key === 'string' ? key : `badge-${this._badgeMap.size}`;
+        this._badgeMap.set(badgeName, badge);
+        return this._badgeMap.size;
+    }
+
+    saveMetadata() {
+        // set the current work diectory as working package root path by default
+        if (!this.workingPackage) {
+            this.workingPackage = process.cwd();
+        }
+        // check the metadata folder
+        const metadataPath = path.resolve(this._workingPackageRootPath, './metadata/badges');
+        if (!fs.existsSync(metadataPath)) {
+            fs.mkdirSync(metadataPath);
+        }
+        for (let [badgename, badge] of this._badgeMap) {
+            let metadata;
+            // only custom badge could use endpoint with metadata
+            if (badge instanceof CustomBadge) {
+                console.log(`badge meta data saved to: ${badgename}`,
+                JSON.stringify(badge.schema, null, 4));
+                fs.writeFileSync(path.resolve(metadataPath, badgename),
+                JSON.stringify(badge.schema, null, 4));
+            } else {
+                console.log('skipp badge: ', JSON.stringify(badge.schema, null, 4));
+            }
+        }
+    }
+
+    toString(badgeName = null) {
+        if (typeof badgeName === 'string' && this._badgeMap.has(badgeName)) {
+            console.log(`get badge (key: ${badgeName})`);
+            return this._badgeMap.get(badgeName).toString();
+        } else {
+            let badgeString = '';
+            for (let [badgename, badge] of this._badgeMap) {
+                console.log(`get badge (key: ${badgename})`);
+                badgeString += `${badge.toString()} `;
+            }
+            return badgeString.trim();
         }
     }
 
     /**
-     * Set the repo to create badges for
-     * @param {String} user the GitHub user of a repo
-     * @param {String} repo the repo name
+     * Insert all badges to the README.md on the working directory.
+     * If the first line is a header line (starts with #), insert after it.
+     * Otherwise, insert to the first line
      */
-    setRepo(user, repo) {
-        this._gitHubUserName = user;
-        this._gitHubRepoNmae = repo;
-    }
-
-    addCodeSize(overrideOptions = null) {
-        this._badgesExpressions.set(BADGE_KEY_CODESIZE,
-            {exp: 'https://img.shields.io/github/package-json/v/{user}/{repo}.svg{parameters}',
-                options: overrideOptions});
-    }
-
-    addPackageVersion(branch = null, overrideOptions = null) {
-        let exp = branch ?
-            `https://img.shields.io/github/package-json/v/{user}/{repo}/${branch}.svg{parameters}` :
-            'https://img.shields.io/github/package-json/v/{user}/{repo}.svg{parameters}';
-        this._badgesExpressions.set(BADGE_KEY_PACKAGEVERSION,
-            {
-                exp: exp,
-                options: overrideOptions
-            });
-    }
-
-    addCustomSimpleBadge(label, color) {
-
-    }
-
-    /**
-     * Insert all badges to a file
-     * @param {path-like-string} filePath the real path of the file to insert to
-     * @param {Number} lineNum the line number to insert
-     * @returns {Badgement} the badgeman object itself
-     */
-    insertTo(filePath, lineNum) {
-        try {
-            this._packageInfo.version = this._semver;
-            fs.writeFileSync(path.resolve(this._workingPackageRootPath, 'package.json'),
-                JSON.stringify(this._packageInfo, null, 4));
-            return this;
-        } catch (error) {
-            console.error('error occurs in saveToNpmPackage:',
-            `error: ${JSON.stringify(error)}`);
-            throw error;
+    insertToReadMe(replace = true) {
+        const badgemanInjectionIndicator = '[//]: # (inserted by Badgeman)';
+        const readMePath = path.resolve(this._workingPackageRootPath, 'README.md');
+        if (!fs.existsSync(readMePath)) {
+            // eslint-disable-next-line max-len
+            throw new Error(`README.md not found in directory: ${this._workingPackageRootPath}`);
         }
+        // check if the first line is heading style
+        const fileContent = fs.readFileSync(readMePath);
+        // get the file content into line-by-line style
+        let lines = fileContent.toString('utf-8').split('\n');
+        // check for header
+        if (Array.isArray(lines) && lines.length > 0) {
+            // look for # XXXXX on the first line
+            if (lines[0].indexOf('# ') === 0 && lines[1] === '') {
+                // this README was injected the badeges by Badgeman
+                if (lines[2] === badgemanInjectionIndicator) {
+                    // if replace the previous badges
+                    if (replace) {
+                        lines[3] = this.toString();
+                    } else {
+                        lines[3] += ` ${this.toString()}`;
+                    }
+                } else {
+                    // this README was not injected the badges by Badgeman yet
+                    // insert 1 blank line, 1 badgemanInjectionIndicator line, and the badges
+                    lines.splice(1, 0, '', badgemanInjectionIndicator, this.toString());
+                }
+            }
+        }
+        fs.writeFileSync(readMePath, lines.join('\n'));
     }
 }
 
-module.exports = Badgeman;
+module.exports = {
+    Badgeman: Badgeman,
+    Badge: Badge,
+    CodeSizeBadge: CodeSizeBadge,
+    RepoSizeBadge: RepoSizeBadge,
+    PackageVersionBadge: PackageVersionBadge,
+    LatestTagBadge: LatestTagBadge,
+    CustomBadge: CustomBadge
+};
