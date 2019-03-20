@@ -1,7 +1,7 @@
 # Badgeman
 
 [//]: # (inserted by Badgeman)
-[![Code Size](https://img.shields.io/github/languages/code-size/JaydenLiang/badgeman.svg?style=flat)]() [![Code Size](https://img.shields.io/github/repo-size/JaydenLiang/badgeman.svg?style=flat)]() [![Code Size](https://img.shields.io/github/tag/JaydenLiang/badgeman.svg?style=flat)]() [![hello](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fraw.githubusercontent.com%2FJaydenLiang%2Fbadgeman%2Fdevelop%2Fmetadata%2Fbadges%2Fbadge-9&style=flat)]()
+[![Code Size](https://img.shields.io/github/languages/code-size/JaydenLiang/badgeman.svg?style=flat)]() [![Code Size](https://img.shields.io/github/repo-size/JaydenLiang/badgeman.svg?style=flat)]() [![Code Size](https://img.shields.io/github/tag/JaydenLiang/badgeman.svg?style=flat)]() [![hello](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fraw.githubusercontent.com%2FJaydenLiang%2Fbadgeman%2Fdevelop%2Fmetadata%2Fbadges%2Fbadge-8&style=flat)]()
 
 ## Install as a global package
 
