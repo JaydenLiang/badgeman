@@ -50,8 +50,8 @@ function init() {
     return _init;
 }
 
-function getEndpoint() {
-
+function getFullyQualifiedEndpoint(badgeman, badgeName) {
+    return `${badgeman._endpointURL}/metadata/badges/${badgeName}`;
 }
 
 function findNextNewLine(lines, fromLine = 0) {
@@ -179,6 +179,10 @@ class CustomBadge extends Badge {
         return badge;
     }
 
+    static createGitHubEndpoint(username, repoName, branchName = 'master') {
+        return `https://raw.githubusercontent.com/${username}/${repoName}/${branchName}`;
+    }
+
     // eslint-disable-next-line max-params
     static createSchema(label, message,
         color = Badge.COLOR_LIGHT_GREY,
@@ -205,11 +209,9 @@ class CustomBadge extends Badge {
             schema.isError = true;
         }
 
-        if (!isNaN(cacheSeconds)) {
-            schema.cacheSeconds = parseInt(cacheSeconds) > 0 ? parseInt(cacheSeconds) : 300;
-        }
-
-        if (cacheSeconds) {
+        if (cacheSeconds && isNaN(cacheSeconds)) {
+            schema.cacheSeconds = 300;
+        } else if (!isNaN(cacheSeconds)) {
             schema.cacheSeconds = parseInt(cacheSeconds) > 0 ? parseInt(cacheSeconds) : 300;
         }
 
@@ -225,11 +227,11 @@ class CustomBadge extends Badge {
         }
 
         if (logoWidth) {
-            schema.logoWidth = logoWidth;
+            schema.logoWidth = isNaN(logoWidth) ? 0 : parseInt(logoWidth);
         }
 
         if (logoPosition) {
-            schema.logoPosition = logoPosition;
+            schema.logoPosition = isNaN(logoPosition) ? 0 : parseInt(logoPosition);
         }
 
         return schema;
@@ -257,13 +259,13 @@ class CustomBadge extends Badge {
         return this._endpointURL;
     }
 
-    toString() {
+    toString(name = '') {
         if (!this._endpointURL) {
             throw new Error('no endpoint URL provided.');
         }
         return `[![${this._label}](https://img.shields.io/endpoint.svg?url=` +
-        `${encodeURIComponent(this._endpointURL)}&style=${this._styleName})]` +
-        `(${this._defaultMessage})`;
+        `${encodeURIComponent(getFullyQualifiedEndpoint(this, name))}` +
+        `&style=${this._styleName})](${this._defaultMessage})`;
     }
 }
 
@@ -370,7 +372,7 @@ class Badgeman {
             let badgeString = '';
             for (let [badgename, badge] of this._badgeMap) {
                 console.log(`get badge (key: ${badgename})`);
-                badgeString += `${badge.toString()} `;
+                badgeString += `${badge.toString(badgename)} `;
             }
             return badgeString.trim();
         }
