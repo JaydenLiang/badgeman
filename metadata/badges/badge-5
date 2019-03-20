@@ -4,7 +4,7 @@
     "style": "flat",
     "color": "lightgrey",
     "labelColor": "grey",
-    "cacheSeconds": 0,
+    "cacheSeconds": 300,
     "namedLogo": "none",
     "logoPosition": 0
 }
