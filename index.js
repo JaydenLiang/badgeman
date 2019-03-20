@@ -394,25 +394,44 @@ class Badgeman {
         const fileContent = fs.readFileSync(readMePath);
         // get the file content into line-by-line style
         let lines = fileContent.toString('utf-8').split('\n');
-        // check for header
+        // determine what extra lines to insert on which line
+        let lineNum = 0, deleteLines = 0, linesToInsert = [], existingBadges = '';
+        // check for heading line
         if (Array.isArray(lines) && lines.length > 0) {
             // look for # XXXXX on the first line
-            if (lines[0].indexOf('# ') === 0 && lines[1] === '') {
-                // this README was injected the badeges by Badgeman
-                if (lines[2] === badgemanInjectionIndicator) {
-                    // if replace the previous badges
-                    if (replace) {
-                        lines[3] = this.toString();
-                    } else {
-                        lines[3] += ` ${this.toString()}`;
-                    }
+            if (lines[0].indexOf('# ') === 0){
+                lineNum ++;// move to next line
+                // if this line isn't a blank line, add a blank line
+                if(lineNum < lines.length && lines[lineNum] !== ''){
+                    linesToInsert.push('');
                 } else {
-                    // this README was not injected the badges by Badgeman yet
-                    // insert 1 blank line, 1 badgemanInjectionIndicator line, and the badges
-                    lines.splice(1, 0, '', badgemanInjectionIndicator, this.toString());
+                    //otherwise, move the next line
+                    lineNum ++;
                 }
             }
         }
+        // if this line is not badgemanInjectionIndicator,
+        // add a badgemanInjectionIndicator
+        if(lineNum < lines.length && lines[lineNum] !== badgemanInjectionIndicator) {
+            linesToInsert.push(badgemanInjectionIndicator);
+        } else {
+            //otherwise, the document has been injected badges by Badgeman at this line
+            // deal with the existing badges on next line then replace the whole line
+            lineNum ++;
+            deleteLines ++;
+            // if keep the existing badges
+            if (lineNum < lines.length && !replace) {
+                existingBadges = `${lines[lineNum]} `;// extra white space separator is needed
+            }
+        }
+        // the line to insert new badges is now stored in lineNum
+        // a new line has been added for insertion if there is a heading line
+        // the badgemanInjectionIndicator has been added for insertion
+        // fi there're any existing badges, they are stored in existingBadges if need to keep them,
+        // the line of exiting badges will be deleted
+        // now insert the badges to the line of lineNum
+        lines.splice(lineNum, deleteLines, '', ...linesToInsert, `${existingBadges}${this.toString()}`);
+        // join all lines with a \n new line character and write back to the file
         fs.writeFileSync(readMePath, lines.join('\n'));
     }
 }
