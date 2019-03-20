@@ -6,5 +6,5 @@
     "labelColor": "grey",
     "cacheSeconds": 0,
     "namedLogo": "none",
-    "logoPosition": "none"
+    "logoPosition": 0
 }
